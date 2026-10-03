@@ -1,0 +1,41 @@
+# Credentials and local environments
+.env
+.env.*
+!.env.example
+**/env.aura
+*.pem
+*.key
+*.p12
+*.pfx
+# Runtime data and generated files
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+*.dump
+*.sql
+*.sql.gz
+*.log
+*.tsbuildinfo
+.pytest_cache/
+coverage/
+.coverage
+htmlcov/
+server/staticfiles/
+server/media/
+server/.embed-cache/
+server/bench*.json
+data/bible_structured.json
+# Personal tooling
+.git/
+.vscode/
+.idea/
+.codex/
+.agents/
+.claude/
+.DS_Store
+Thumbs.db

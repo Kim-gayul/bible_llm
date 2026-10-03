@@ -1,0 +1,344 @@
+/*
+ * 전역 사이드바.
+ *
+ * ★ 화면을 밀지 않고 위에 겹친다.
+ *   밀면 캔버스도 함께 밀려 카메라 구도가 틀어진다. 은하수가 제자리에
+ *   있어야 "사이드바를 잠깐 열었다" 로 읽힌다.
+ */
+
+.trigger {
+  position: fixed;
+  top: var(--sp-4);
+  /*
+   * ★ 왼쪽 끝에 더 붙인다.
+   *   본문 여백(clamp)에 맞춰 두었더니 넓은 화면에서 한참 안쪽에 떠서,
+   *   사이드바를 여는 손잡이가 아니라 화면 안의 버튼처럼 보였다.
+   */
+  left: var(--sp-4);
+  z-index: var(--z-menu);
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-0);
+  border-radius: var(--radius-md);
+  background: var(--bg-scrim);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.trigger:hover { border-color: var(--line-2); }
+
+.trigger[aria-expanded='true'] {
+  border-color: var(--light-silver);
+  background: var(--bg-2);
+}
+
+/* 작대기 셋 — 글리프가 아니라 선이라 폰트 로딩과 무관하다 */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 16px;
+}
+
+.bars > span {
+  height: 1px;
+  background: var(--ink-1);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.trigger:hover .bars > span,
+.trigger[aria-expanded='true'] .bars > span {
+  background: var(--light-warm);
+}
+
+/*
+ * 덮는 판.
+ *
+ * ★ 아주 옅다.
+ *   짙게 깔면 사이드바를 여는 순간 다른 화면으로 넘어간 것처럼 보인다.
+ *   별이 계속 보여야 한다. 다만 포인터는 받는다 — 바깥을 눌러 닫는 것이
+ *   가장 흔한 동작이다.
+ */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-menu) - 1);
+  background: rgba(3, 3, 5, 0.34);
+  animation: scrimIn var(--dur-base) var(--ease-out) both;
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: var(--z-menu);
+  width: min(19rem, 84vw);
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--sp-4) + 44px) var(--sp-4) var(--sp-4);
+
+  background: var(--bg-scrim);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-right: 1px solid var(--line-0);
+
+  animation: slideIn var(--dur-base) var(--ease-out) both;
+}
+
+.panel:focus { outline: none; }
+
+/* ── 위: 이동할 곳 ────────────────────────────────────────────── */
+
+.top {
+  flex-shrink: 0;
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--line-0);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.item:hover { background: var(--bg-2); }
+.item[aria-current='page'] { background: var(--bg-2); }
+
+.label {
+  font-size: var(--fs-body);
+  letter-spacing: 0.04em;
+  color: var(--ink-0);
+}
+
+.hint {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+/* 아직 만들지 않은 자리 — 누를 수 없다는 것이 생김새로 드러난다 */
+.soon {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  opacity: 0.4;
+}
+
+/* ── 가운데: 지난 상담 ────────────────────────────────────────── */
+
+/*
+ * ★ 여기만 늘어나고 스크롤한다.
+ *   대화가 쌓여도 위의 메뉴와 아래의 톱니는 늘 같은 자리에 있어야 한다.
+ *   목록이 길어졌다고 계정 버튼이 화면 밖으로 밀려나면, 로그아웃하려고
+ *   스크롤을 내려야 한다.
+ */
+.threads {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-3) 0;
+}
+
+.sectionTitle {
+  margin: 0 0 var(--sp-2);
+  padding-inline: var(--sp-3);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+.threadList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/*
+ * 대화방 한 줄.
+ *
+ * ★ 이 스타일들이 통째로 빠져 있었다.
+ *   TSX 는 .thread / .threadOpen / .threadTitle 을 쓰고 있는데 CSS 에
+ *   정의가 없었다. CSS 모듈은 없는 클래스를 조용히 undefined 로
+ *   넘기므로 오류가 안 난다 — 글자만 브라우저 기본 16px 로 커지고,
+ *   왜 커졌는지는 화면만 봐서는 알 수 없다.
+ *
+ * ★ 제목과 지우기 버튼이 한 줄에 선다.
+ *   지우기를 아래에 두면 대화 하나가 두 줄을 먹어 목록이 절반만 보인다.
+ */
+.thread {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--radius-md);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.thread:hover { background: var(--bg-2); }
+
+.threadOpen {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+}
+
+/*
+ * ★ 제목은 한 줄로 자른다.
+ *   대화 제목은 첫 질문에서 온다 — 길면 목록 하나가 세 줄을 먹는다.
+ *   목록에서는 "어느 대화인가" 만 알면 되고, 전문은 열면 나온다.
+ */
+.threadTitle {
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  color: var(--ink-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.threadWho {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+/*
+ * 지우기.
+ *
+ * ★ 평소에는 흐리게 둔다.
+ *   목록을 훑는 동안 ✕ 가 또렷하면 눈이 그리로 간다. 지우기는 가끔
+ *   하는 일이므로 필요할 때만 드러나면 된다.
+ */
+.threadRemove {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-right: var(--sp-1);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  opacity: 0.5;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.thread:hover .threadRemove { opacity: 1; }
+.threadRemove:hover { color: var(--ink-0); }
+.threadRemove:focus-visible { opacity: 1; }
+
+/* 한 번 더 묻기 — 창을 띄우지 않고 그 자리에서 문구만 바뀐다 */
+.confirm {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding-right: var(--sp-2);
+}
+
+.confirmYes,
+.confirmNo {
+  padding: 2px var(--sp-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.confirmYes { color: var(--ink-1); }
+.confirmYes:hover { color: var(--light-warm); }
+.confirmNo { color: var(--ink-3); }
+.confirmNo:hover { color: var(--ink-1); }
+
+/* ── 아래: 톱니바퀴와 계정 ────────────────────────────────────── */
+
+.bottom {
+  flex-shrink: 0;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line-0);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gear,
+.account {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  text-align: left;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.gear:hover,
+.account:hover {
+  background: var(--bg-2);
+  color: var(--ink-0);
+}
+
+.gear[aria-current='page'] {
+  background: var(--bg-2);
+  color: var(--ink-0);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes scrimIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/*
+ * 모션 축소.
+ * 밀려 나오는 대신 그 자리에서 밝아진다 — 정보는 그대로, 움직임만 사라진다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: scrimIn var(--dur-base) linear both;
+  }
+}
